@@ -1,0 +1,318 @@
+/*
+ * ═══════════════════════════════════════════════════════════════
+ *  BICHRADIO DESIGN SYSTEM — LIGHT
+ *  The same restraint, warmth, and grain, inverted to paper.
+ *
+ *  Aesthetic direction:
+ *    — Warm paper backgrounds, never pure white
+ *    — Espresso text, never pure black
+ *    — Single gold accent, used sparingly
+ *      (darkened to --accent-ink wherever gold becomes TEXT,
+ *       since brand gold fails contrast on a light ground)
+ *    — Monospace body font paired with italic serif display
+ *    — Everything whispered, nothing shouted
+ *
+ *  Google Fonts import (add to <head>):
+ *    <link rel="preconnect" href="https://fonts.googleapis.com" />
+ *    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+ *    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet" />
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   1. TOKENS
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* Colour palette — paper */
+  --bg:            #f5f2ea;   /* page background — warm paper, never pure white */
+  --bg-elevated:   #efe9da;   /* cards, banners — one step toward gold */
+  --surface:       #fbf9f3;   /* buttons, inputs, containers — lifted off paper */
+  --border:        rgba(38, 33, 26, 0.12); /* hairline borders */
+  --border-accent: rgba(160, 120, 50, 0.30); /* accent-tinted borders */
+
+  /* Text — espresso */
+  --text:   #26211a;                  /* primary — warm near-black */
+  --muted:  rgba(38, 33, 26, 0.55);   /* secondary — dimmed */
+  --subtle: rgba(38, 33, 26, 0.34);   /* tertiary — very dim */
+
+  /* Accent — gold */
+  --accent:     #c8a96e;  /* brand gold — FILLS, dots, active borders */
+  --accent-ink: #8a6a2c;  /* darkened gold — gold as TEXT on light ground */
+  --accent-dim: rgba(200, 169, 110, 0.18); /* accent as a background tint */
+
+  /* Status */
+  --red:     #c0392b;   /* errors, destructive */
+  --red-dot: #d14545;   /* live indicator */
+
+  /* Typography */
+  --font-mono:  'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+
+  /* Spacing scale */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  28px;
+  --space-2xl: 40px;
+
+  /* Border radius */
+  --radius-sm:   2px;
+  --radius-md:   10px;
+  --radius-full: 50%;
+
+  /* Transitions */
+  --ease:        0.2s ease;
+  --ease-slow:   0.4s ease;
+  --ease-spring: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2. RESET
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. GRAIN OVERLAY (dark noise, very low opacity — reads on paper)
+   ───────────────────────────────────────────────────────────── */
+.grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. TYPOGRAPHY
+   ───────────────────────────────────────────────────────────── */
+.text-display {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--accent-ink);
+  letter-spacing: 0.04em;
+}
+.text-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 5vw, 1.7rem);
+  line-height: 1.35;
+  color: var(--text);
+}
+.text-body { font-family: var(--font-mono); font-size: 0.875rem; color: var(--text); }
+.text-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.text-caption {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.text-accent { color: var(--accent-ink); }
+.text-muted  { color: var(--muted); }
+.text-subtle { color: var(--subtle); }
+
+/* ─────────────────────────────────────────────────────────────
+   5. BUTTONS
+   ───────────────────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: var(--space-sm) 22px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--ease);
+  min-height: 44px;            /* accessible tap target */
+}
+.btn:hover  { border-color: var(--accent); color: var(--accent-ink); }
+.btn:active { transform: scale(0.96); }
+.btn.active {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent-dim);
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+.btn-icon {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted);
+  transition: color var(--ease), transform 0.15s;
+  padding: var(--space-sm);
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px;
+}
+.btn-icon:hover  { color: var(--text); transform: scale(1.1); }
+.btn-icon:active { transform: scale(0.95); }
+
+.btn-circle {
+  width: 64px; height: 64px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--ease);
+}
+.btn-circle:hover { border-color: var(--accent); color: var(--accent-ink); transform: scale(1.05); }
+.btn-circle:active { transform: scale(0.94); }
+
+/* Solid accent button — for the single most important action */
+.btn-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1f1a10;
+}
+.btn-accent:hover { background: var(--accent-ink); border-color: var(--accent-ink); color: #fff; }
+
+/* ─────────────────────────────────────────────────────────────
+   6. RANGE / SLIDER INPUT
+   ───────────────────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  flex: 1; height: 1px;
+  background: var(--border);
+  outline: none; border-radius: 1px; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px; border-radius: var(--radius-full);
+  background: var(--accent); cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: var(--radius-full);
+  background: var(--accent); border: none; cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   7. BADGES & STATUS
+   ───────────────────────────────────────────────────────────── */
+.badge-live {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.6rem; letter-spacing: 0.18em;
+  color: var(--muted); text-transform: uppercase;
+}
+.badge-live__dot {
+  width: 6px; height: 6px; border-radius: var(--radius-full);
+  background: var(--red-dot); box-shadow: 0 0 8px var(--red-dot);
+  animation: pulse 2s ease-in-out infinite; flex-shrink: 0;
+}
+.tag {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-mono); font-size: 0.55rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--border);
+  padding: 3px 10px; border-radius: var(--radius-sm);
+}
+.tag.tag--accent {
+  color: var(--accent-ink);
+  border-color: var(--border-accent);
+  background: var(--accent-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   8. CARDS & SURFACES
+   ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+.card--elevated { background: var(--bg-elevated); border-color: var(--border-accent); }
+.divider { width: 100%; height: 1px; background: var(--border); }
+
+/* ─────────────────────────────────────────────────────────────
+   9. ANIMATIONS
+   ───────────────────────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--red-dot); }
+  50%      { opacity: 0.4; box-shadow: 0 0 2px var(--red-dot); }
+}
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideup {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes pop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.animate-fadein  { animation: fadein 0.8s ease both; }
+.animate-slideup { animation: slideup var(--ease-spring) both; }
+.fading { opacity: 0; transition: opacity var(--ease-slow); }
+
+/* ─────────────────────────────────────────────────────────────
+   10. LAYOUT UTILITIES
+   ───────────────────────────────────────────────────────────── */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+
+.app-shell {
+  height: 100dvh;
+  display: flex; flex-direction: column;
+  padding-top:    max(env(safe-area-inset-top, 0px), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+  padding-left:   env(safe-area-inset-left, 0px);
+  padding-right:  env(safe-area-inset-right, 0px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   11. SHEET / BOTTOM BANNER
+   ───────────────────────────────────────────────────────────── */
+.sheet {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 999;
+  padding: var(--space-md) var(--space-xl) var(--space-lg);
+  padding-bottom: max(var(--space-lg), calc(env(safe-area-inset-bottom, 0px) + var(--space-md)));
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-accent);
+  box-shadow: 0 -8px 30px rgba(38, 33, 26, 0.08);
+}
+.sheet.visible {
+  display: flex; flex-direction: column; gap: var(--space-md);
+  animation: slideup var(--ease-spring) both;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   12. ACCESSIBILITY
+   ───────────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
