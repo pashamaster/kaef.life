@@ -1,26 +1,24 @@
-# Matrix — priority by position
+# kaef.life — priority by position
 
-An Eisenhower-style task matrix. Tap the canvas to drop a task; its **position is its priority** — horizontal = urgency, vertical = importance. Everything lives on the device. No account, no PII; each install gets a random 5-digit id (a label for now, an identity hook for sync later).
+An Eisenhower-style task matrix. Tap the canvas to drop a task; its **position is its priority** — horizontal = urgency, vertical = importance. Mark a task done and it **stays on the board, struck through**, so the picture of what you've cleared stays intact. Everything lives on the device; each install gets a random 5-digit id.
+
+The matrix **scales to the full screen width** — it sizes itself to the largest square that fits between the header and the dock.
 
 ## Files
-- `index.html` — the whole app (CSS + logic inline). Self-contained app shell.
-- `manifest.webmanifest` — install metadata.
-- `service-worker.js` — offline app-shell cache.
-- `icons/` — app icons (192, 512, maskable, svg).
-- `bichradio-light.css` — the design system converted to the bright theme, as a standalone file for future screens.
+- `index.html` — the whole app (CSS + logic inline).
+- `manifest.webmanifest`, `service-worker.js`, `icons/` — PWA scaffolding.
+- `bichradio-light.css` — the design system, bright theme, standalone for future screens.
 
 ## Run it
-**Quick look:** open `index.html` directly in a browser. The matrix, dragging, and labels all work. (Service worker and "Add to Home Screen" need real hosting; see below.)
+**Quick look:** open `index.html` in a browser — matrix, dragging, labels all work.
 
-**As an installable PWA** — serve the folder over `localhost` or HTTPS:
+**As an installable PWA** — serve over `localhost` or HTTPS:
 ```bash
-cd matrix
-python3 -m http.server 8000
-# visit http://localhost:8000  → browser menu → Install / Add to Home Screen
+python3 -m http.server 8000   # visit http://localhost:8000 -> Install / Add to Home Screen
 ```
 
 ## Storage
-Data persists in `localStorage` behind a small `Store` interface in `index.html`. If storage is blocked (e.g. a sandboxed preview frame), the app falls back to in-memory and says so in the hint line, so the demo still works for the session.
+Data persists in `localStorage` behind a small `Store` interface. If storage is blocked (e.g. a sandboxed preview frame) it falls back to in-memory and says so in the hint line.
 
-## Next: option 4 (sync)
-The app never touches storage directly — only `Store.load()` / `Store.save(state)`. To add passkey login + encrypted cross-device sync later, swap those two methods' internals for IndexedDB + WebCrypto + a sync call. No app logic changes.
+## Postponed
+Cross-device sync and shareable links are deferred. The app only ever calls `Store.load()` / `Store.save(state)`, so adding passkey login + encrypted sync later is a change to the storage internals, not a rewrite.
