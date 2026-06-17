@@ -1,7 +1,7 @@
 {
   "name": "kaef.life — priority by position",
   "short_name": "kaef",
-  "description": "Plot tasks on an importance / urgency matrix. Private, on-device, no account.",
+  "description": "Plot tasks on an importance / urgency matrix and run them in sprints. Private, on-device, no account.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

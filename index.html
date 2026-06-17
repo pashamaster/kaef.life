@@ -4,10 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>kaef.life — priority by position</title>
-
-<meta name="description" content="Plot tasks on an importance / urgency matrix. Private, on-device, no account." />
+<meta name="description" content="Plot tasks on an importance / urgency matrix, run them in sprints. Private, on-device." />
 <meta name="theme-color" content="#f5f2ea" />
-
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -15,22 +13,17 @@
 <meta name="apple-mobile-web-app-title" content="kaef.life" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
-
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet" />
-
 <style>
-/* ============================================================
-   BICHRADIO — LIGHT  (tokens + components, inlined)
-   ============================================================ */
+/* ============================================================ BICHRADIO — LIGHT ============================================================ */
 :root{
   --bg:#f5f2ea; --bg-elevated:#efe9da; --surface:#fbf9f3;
   --border:rgba(38,33,26,.12); --border-accent:rgba(160,120,50,.30);
   --text:#26211a; --muted:rgba(38,33,26,.55); --subtle:rgba(38,33,26,.34);
   --accent:#c8a96e; --accent-ink:#8a6a2c; --accent-dim:rgba(200,169,110,.18);
-  --done-fill:#cabfa6;
-  --red:#c0392b; --red-dot:#d14545;
+  --done-fill:#cabfa6; --red:#c0392b; --red-dot:#d14545;
   --font-mono:'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   --font-serif:'Playfair Display',Georgia,'Times New Roman',serif;
   --space-xs:4px; --space-sm:8px; --space-md:16px; --space-lg:24px; --space-xl:28px;
@@ -38,65 +31,46 @@
   --ease:.2s ease; --ease-spring:.4s cubic-bezier(.16,1,.3,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);
-  font-family:var(--font-mono);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  overscroll-behavior:none}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overscroll-behavior:none}
 body{-webkit-tap-highlight-color:transparent}
-
 .grain::before{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:.035;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
-
 .text-label{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-.text-muted{color:var(--muted)} .text-subtle{color:var(--subtle)} .text-accent{color:var(--accent-ink)}
 
 .btn{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
   background:var(--surface);border:1px solid var(--border);color:var(--muted);
-  padding:var(--space-sm) 18px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--ease);min-height:44px}
+  padding:var(--space-sm) 16px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--ease);min-height:44px}
 .btn:hover{border-color:var(--accent);color:var(--accent-ink)}
 .btn:active{transform:scale(.96)}
 .btn.active{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-dim)}
-.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 .btn-accent{background:var(--accent);border-color:var(--accent);color:#1f1a10}
 .btn-accent:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
 .btn-danger{color:var(--red);border-color:rgba(192,57,43,.25)}
 .btn-danger:hover{border-color:var(--red);color:var(--red);background:rgba(192,57,43,.07)}
-
 :focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
-
 @keyframes slideup{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pop{0%{transform:translate(-50%,-50%) scale(0)}70%{transform:translate(-50%,-50%) scale(1.18)}100%{transform:translate(-50%,-50%) scale(1)}}
 
-/* ============================================================
-   APP LAYOUT
-   ============================================================ */
+/* ============================================================ LAYOUT ============================================================ */
 .app-shell{height:100dvh;display:flex;flex-direction:column;
-  padding-top:max(env(safe-area-inset-top,0px),0px);
-  padding-bottom:max(env(safe-area-inset-bottom,0px),0px);
+  padding-top:max(env(safe-area-inset-top,0px),0px);padding-bottom:max(env(safe-area-inset-bottom,0px),0px);
   padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-
-.top{display:flex;align-items:flex-start;justify-content:space-between;
-  padding:var(--space-md) var(--space-lg) var(--space-sm);flex-shrink:0}
+.top{display:flex;align-items:flex-start;justify-content:space-between;padding:var(--space-md) var(--space-lg) var(--space-sm);flex-shrink:0}
 .brand{display:flex;flex-direction:column;gap:3px}
-.brand h1{font-family:var(--font-serif);font-style:italic;color:var(--accent-ink);
-  font-size:1.5rem;font-weight:500;line-height:1;letter-spacing:.02em}
+.brand h1{font-family:var(--font-serif);font-style:italic;color:var(--accent-ink);font-size:1.5rem;font-weight:500;line-height:1;letter-spacing:.02em}
 .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.id-chip{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
-  border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;white-space:nowrap}
+.id-chip{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;white-space:nowrap}
 .id-chip b{color:var(--accent-ink);font-weight:500;letter-spacing:.1em}
 .count{font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--subtle)}
 .count b{color:var(--accent-ink);font-weight:500}
 
-/* Stage fills the space between header and dock; the matrix fills the stage. */
-.stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;
-  min-height:0;padding:var(--space-md) var(--space-sm)}
-@supports (width:100cqmin){ .stage{container-type:size} }
-
-/* ── THE MATRIX — scales to the full available width ─────── */
-.matrix-wrap{position:relative;width:min(94vw,64vh);height:min(94vw,64vh)}
-@supports (width:100cqmin){ .matrix-wrap{width:100cqmin;height:100cqmin} }
-
-.matrix{position:absolute;inset:0;touch-action:none;cursor:crosshair;
+/* Stage fills the space; the matrix fills the stage as a rectangle with a frame */
+.stage{flex:1;display:flex;position:relative;min-height:0;padding:var(--space-md)}
+.matrix-wrap{position:relative;width:100%;height:100%}
+.matrix{position:absolute;inset:0;touch-action:none;cursor:crosshair;overflow:visible;
   border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 12px 40px rgba(38,33,26,.06)}
 .matrix::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
@@ -118,7 +92,6 @@ body{-webkit-tap-highlight-color:transparent}
   cursor:grab;touch-action:none;z-index:5;box-shadow:0 1px 4px rgba(38,33,26,.25);animation:pop .3s var(--ease-spring) both}
 .dot:active{cursor:grabbing}
 .dot.dragging{z-index:20;box-shadow:0 4px 14px rgba(38,33,26,.3)}
-/* done: stays on the board, clearly visible, just muted + struck */
 .dot.done{background:var(--done-fill);border-color:rgba(38,33,26,.4)}
 .dot-label{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:.62rem;color:var(--text);
   background:var(--bg);padding:1px 6px;border-radius:var(--radius-sm);border:1px solid var(--border);
@@ -126,14 +99,26 @@ body{-webkit-tap-highlight-color:transparent}
 .dot.flip-left .dot-label{left:auto;right:15px}
 .dot.done .dot-label{color:var(--muted);text-decoration:line-through}
 
-.hint{position:absolute;left:50%;bottom:-28px;transform:translateX(-50%);font-size:.62rem;letter-spacing:.12em;
-  color:var(--subtle);text-align:center;text-transform:uppercase;pointer-events:none;width:100%}
+.hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:.62rem;letter-spacing:.1em;
+  color:var(--muted);text-align:center;text-transform:uppercase;pointer-events:none;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;line-height:1.8}
 
-/* ── DOCK ─────────────────────────────────────────────────── */
-.dock{flex-shrink:0;display:flex;align-items:center;justify-content:center;
+/* ── DOCK: sprint pager + view toggle ─────────────────────── */
+.dock{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-sm);
   padding:var(--space-md) var(--space-lg) var(--space-lg)}
+.pager{display:inline-flex;align-items:center;gap:var(--space-xs)}
+.btn-nav{font-family:var(--font-mono);font-size:1.1rem;line-height:1;background:var(--surface);
+  border:1px solid var(--border);color:var(--muted);border-radius:var(--radius-sm);
+  min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--ease)}
+.btn-nav:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn-nav:active{transform:scale(.94)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.btn-nav.create{border-color:var(--border-accent);color:var(--accent-ink)}
+.btn-nav.create::after{content:'+';position:absolute;font-size:.55rem;transform:translate(11px,-10px)}
+.sprint-label{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);
+  min-width:62px;text-align:center;white-space:nowrap}
 .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
-.seg .btn{border:none;border-radius:0;background:transparent;min-width:120px}
+.seg .btn{border:none;border-radius:0;background:transparent;min-width:92px}
 .seg .btn+.btn{border-left:1px solid var(--border)}
 
 /* ── LIST VIEW ────────────────────────────────────────────── */
@@ -160,8 +145,7 @@ body{-webkit-tap-highlight-color:transparent}
 .scrim.show{display:block}
 .sheet{display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;background:var(--bg-elevated);
   border-top:1px solid var(--border-accent);box-shadow:0 -8px 30px rgba(38,33,26,.1);
-  padding:var(--space-md) var(--space-lg);
-  padding-bottom:max(var(--space-lg),calc(env(safe-area-inset-bottom,0px) + var(--space-md)))}
+  padding:var(--space-md) var(--space-lg);padding-bottom:max(var(--space-lg),calc(env(safe-area-inset-bottom,0px) + var(--space-md)))}
 .sheet.visible{display:flex;flex-direction:column;gap:var(--space-md);animation:slideup var(--ease-spring) both}
 .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-md)}
 .sheet-quad{display:flex;flex-direction:column;gap:2px}
@@ -178,10 +162,20 @@ body{-webkit-tap-highlight-color:transparent}
 .done-toggle.on{color:var(--accent-ink);border-color:var(--accent);background:var(--accent-dim)}
 .done-toggle .box{width:14px;height:14px;border:1.5px solid currentColor;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px}
 
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+/* ── TOAST (with optional undo) ───────────────────────────── */
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);transform:translateX(-50%) translateY(10px);
+  display:flex;align-items:center;gap:14px;background:var(--text);color:var(--bg);font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:11px 16px;border-radius:var(--radius-sm);z-index:1001;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast-action{background:none;border:1px solid var(--bg);color:var(--bg);font:inherit;letter-spacing:.12em;
+  padding:5px 10px;border-radius:var(--radius-sm);cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+@media (max-width:380px){
+  .seg .btn{min-width:64px} .brand h1{font-size:1.3rem}
+  .sprint-label{min-width:48px;font-size:.55rem} .btn-nav{min-width:40px} .dock{padding-left:var(--space-md);padding-right:var(--space-md)}
 }
-@media (max-width:360px){ .seg .btn{min-width:96px} .brand h1{font-size:1.3rem} }
 </style>
 </head>
 <body class="grain">
@@ -200,21 +194,21 @@ body{-webkit-tap-highlight-color:transparent}
 
   <main class="stage">
     <div class="matrix-wrap">
-      <div class="matrix" id="matrix" role="application" aria-label="Importance and urgency matrix. Tap an empty area to add a task.">
+      <div class="matrix" id="matrix" role="application" aria-label="Importance and urgency matrix. Tap an empty area to add a task; swipe left or right to change sprint.">
         <div class="axis axis-x"></div>
         <div class="axis axis-y"></div>
         <span class="axis-cap cap-r"></span>
         <span class="axis-cap cap-t"></span>
         <span class="axis-label al-top">important</span>
-        <span class="axis-label al-bottom">not important</span>
-        <span class="axis-label al-left">not urgent</span>
+        <span class="axis-label al-bottom">less important</span>
+        <span class="axis-label al-left">less urgent</span>
         <span class="axis-label al-right">urgent</span>
         <span class="quad q-plan">plan</span>
         <span class="quad q-do">do</span>
         <span class="quad q-drop">drop</span>
         <span class="quad q-deleg">delegate</span>
       </div>
-      <div class="hint" id="hint">tap anywhere to drop a task</div>
+      <div class="hint" id="hint">tap to add a task<br>swipe to change sprint</div>
     </div>
 
     <section class="list-view" id="listView" aria-hidden="true">
@@ -223,6 +217,11 @@ body{-webkit-tap-highlight-color:transparent}
   </main>
 
   <nav class="dock">
+    <div class="pager">
+      <button class="btn-nav" id="prevSprint" aria-label="Previous sprint">&lsaquo;</button>
+      <span class="sprint-label" id="sprintLabel">Sprint 1</span>
+      <button class="btn-nav" id="nextSprint" aria-label="Next or new sprint">&rsaquo;</button>
+    </div>
     <div class="seg" role="tablist" aria-label="View">
       <button class="btn active" id="tabMatrix" role="tab" aria-selected="true">Matrix</button>
       <button class="btn" id="tabList" role="tab" aria-selected="false">List</button>
@@ -230,7 +229,6 @@ body{-webkit-tap-highlight-color:transparent}
   </nav>
 </div>
 
-<!-- edit / add task sheet -->
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Task">
   <div class="sheet-head">
@@ -249,17 +247,18 @@ body{-webkit-tap-highlight-color:transparent}
   </div>
 </div>
 
+<div class="toast" id="toast"><span id="toastMsg"></span><button class="toast-action" id="toastAction" style="display:none"></button></div>
+
 <script>
 "use strict";
 
 /* ============================================================
-   Store — swappable persistence (MVP: localStorage).
-   Falls back to in-memory if storage is blocked (e.g. preview frame).
+   Store — swappable persistence (MVP: localStorage)
    ============================================================ */
 const Store = (() => {
   const KEY = "kaef.state.v1";
-  let backend = "memory", mem = null;
-  try { const t="__probe__"; localStorage.setItem(t,"1"); localStorage.removeItem(t); backend="local"; } catch(_){}
+  let backend="memory", mem=null;
+  try{ const t="__probe__"; localStorage.setItem(t,"1"); localStorage.removeItem(t); backend="local"; }catch(_){}
   return {
     backend,
     load(){ if(backend==="local"){ try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null;}catch(_){return null;} } return mem; },
@@ -267,28 +266,37 @@ const Store = (() => {
   };
 })();
 
-const clamp = (n,lo,hi)=>Math.min(hi,Math.max(lo,n));
-const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const genUserId = ()=>String(Math.floor(10000+Math.random()*90000));
+const clamp=(n,lo,hi)=>Math.min(hi,Math.max(lo,n));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const genUserId=()=>String(Math.floor(10000+Math.random()*90000));
+const DROP=0.10; // sprint carry-over: importance & urgency each fall by 10 points
 
-let state = Store.load();
-if(!state || !Array.isArray(state.tasks)) state = { v:1, userId:genUserId(), tasks:[] };
-if(!state.userId) state.userId = genUserId();
+/* ── State + migration (v1 single board → v2 sprints) ──────── */
+function newSprint(n,tasks){ return { id:uid(), n, createdAt:Date.now(), tasks:tasks||[] }; }
+function freshState(){ return { v:2, userId:genUserId(), sprints:[newSprint(1)], current:0 }; }
+function migrate(s){
+  if(!s) return freshState();
+  if(Array.isArray(s.sprints)){ if(typeof s.current!=="number") s.current=0; if(!s.userId) s.userId=genUserId();
+    s.current=clamp(s.current,0,s.sprints.length-1); return s; }
+  const tasks=Array.isArray(s.tasks)?s.tasks:[];           // old v1 shape
+  return { v:2, userId:s.userId||genUserId(), sprints:[newSprint(1,tasks)], current:0 };
+}
+let state=migrate(Store.load());
 function persist(){ Store.save(state); }
 persist();
 
-const QUADS = {
+const cur=()=>state.sprints[state.current];
+
+const QUADS={
   do:{name:"Do",desc:"important & urgent"},
-  plan:{name:"Plan",desc:"important, not urgent"},
-  delegate:{name:"Delegate",desc:"urgent, not important"},
-  drop:{name:"Drop",desc:"not urgent or important"}
+  plan:{name:"Plan",desc:"important, less urgent"},
+  delegate:{name:"Delegate",desc:"urgent, less important"},
+  drop:{name:"Drop",desc:"less urgent, less important"}
 };
 function quadKey(x,y){ const imp=y>=.5,urg=x>=.5; if(imp&&urg)return"do"; if(imp&&!urg)return"plan"; if(!imp&&urg)return"delegate"; return"drop"; }
 
-/* ============================================================
-   Elements
-   ============================================================ */
-const $ = id => document.getElementById(id);
+/* ============================================================ Elements ============================================================ */
+const $=id=>document.getElementById(id);
 const matrix=$("matrix"), hint=$("hint"), userIdEl=$("userId"), countEl=$("countNum");
 const listView=$("listView"), listScroll=$("listScroll");
 const tabMatrix=$("tabMatrix"), tabList=$("tabList");
@@ -296,21 +304,58 @@ const scrim=$("scrim"), sheet=$("sheet"), taskInput=$("taskInput");
 const quadName=$("quadName"), quadDesc=$("quadDesc");
 const doneToggle=$("doneToggle"), doneBox=$("doneBox"), doneText=$("doneText");
 const deleteBtn=$("deleteBtn"), cancelBtn=$("cancelBtn"), saveBtn=$("saveBtn");
-userIdEl.textContent = state.userId;
+const prevBtn=$("prevSprint"), nextBtn=$("nextSprint"), sprintLabel=$("sprintLabel");
+const toastEl=$("toast"), toastMsg=$("toastMsg"), toastAction=$("toastAction");
+userIdEl.textContent=state.userId;
 
-/* ============================================================
-   Task helpers
-   ============================================================ */
-function getTask(id){ return state.tasks.find(t=>t.id===id); }
-function removeTask(id){ state.tasks=state.tasks.filter(t=>t.id!==id); persist(); }
+let toastTimer=null;
+function toast(msg,actionLabel,actionFn){
+  toastMsg.textContent=msg;
+  if(actionLabel&&actionFn){ toastAction.textContent=actionLabel; toastAction.style.display="";
+    toastAction.onclick=()=>{ actionFn(); hideToast(); }; }
+  else { toastAction.style.display="none"; toastAction.onclick=null; }
+  toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(hideToast,4000);
+}
+function hideToast(){ toastEl.classList.remove("show"); }
+
+/* ============================================================ Task helpers (operate on the current sprint) ============================================================ */
+function getTask(id){ return cur().tasks.find(t=>t.id===id); }
+function removeTask(id){ cur().tasks=cur().tasks.filter(t=>t.id!==id); persist(); }
 function addTask(x,y){
   const t={ id:uid(), label:"", x:clamp(x,.03,.97), y:clamp(y,.03,.97), done:false, createdAt:Date.now(), updatedAt:Date.now() };
-  state.tasks.push(t); persist(); return t;
+  cur().tasks.push(t); persist(); return t;
 }
 
-/* ============================================================
-   Edit / add sheet
-   ============================================================ */
+/* ============================================================ Sprints ============================================================ */
+function startNewSprint(){
+  const from=cur();
+  const carried=from.tasks.filter(t=>!t.done).map(t=>({
+    id:uid(), label:t.label,
+    x:clamp(t.x-DROP,.03,.97), y:clamp(t.y-DROP,.03,.97),
+    done:false, createdAt:Date.now(), updatedAt:Date.now(), fromSprint:from.n
+  }));
+  const n=state.sprints.reduce((m,s)=>Math.max(m,s.n),0)+1;
+  state.sprints.push(newSprint(n,carried));
+  const createdIndex=state.sprints.length-1;
+  state.current=createdIndex; persist(); render();
+  toast(`Sprint ${n} · ${carried.length} carried over`, "Undo", ()=>undoSprint(createdIndex,n));
+}
+function undoSprint(index,n){
+  if(state.sprints.length<=1) return;
+  if(index<0||index>=state.sprints.length||state.sprints[index].n!==n) return; // stale undo
+  state.sprints.splice(index,1);
+  state.current=clamp(state.current,0,state.sprints.length-1);
+  persist(); render();
+}
+function goNext(){
+  if(state.current<state.sprints.length-1){ state.current++; persist(); render(); }
+  else startNewSprint();
+}
+function goPrev(){ if(state.current>0){ state.current--; persist(); render(); } }
+prevBtn.addEventListener("click",goPrev);
+nextBtn.addEventListener("click",goNext);
+
+/* ============================================================ Edit / add sheet ============================================================ */
 let editingId=null, isNew=false;
 function openSheet(id,opts={}){
   editingId=id; isNew=!!opts.isNew;
@@ -323,7 +368,7 @@ function openSheet(id,opts={}){
 }
 function hideSheet(){ sheet.classList.remove("visible"); scrim.classList.remove("show"); }
 function closeSheet(commit=true){
-  if(isNew && commit===false){ const t=getTask(editingId); if(t && !t.label.trim()) removeTask(editingId); }
+  if(isNew&&commit===false){ const t=getTask(editingId); if(t&&!t.label.trim()) removeTask(editingId); }
   hideSheet(); editingId=null; isNew=false; render();
 }
 function setDoneUI(done){ doneToggle.classList.toggle("on",done); doneBox.textContent=done?"✓":""; doneText.textContent=done?"done":"mark done"; }
@@ -331,8 +376,7 @@ function saveSheet(){
   const t=getTask(editingId); if(!t) return closeSheet();
   const label=taskInput.value.trim();
   if(!label){ removeTask(editingId); hideSheet(); editingId=null; isNew=false; render(); return; }
-  t.label=label; t.updatedAt=Date.now(); isNew=false; persist();
-  hideSheet(); editingId=null; render();
+  t.label=label; t.updatedAt=Date.now(); isNew=false; persist(); hideSheet(); editingId=null; render();
 }
 doneToggle.addEventListener("click",()=>{ const t=getTask(editingId); if(!t)return; t.done=!t.done; t.updatedAt=Date.now(); setDoneUI(t.done); persist(); render(); });
 deleteBtn.addEventListener("click",()=>{ if(editingId) removeTask(editingId); closeSheet(); });
@@ -341,18 +385,25 @@ saveBtn.addEventListener("click",saveSheet);
 scrim.addEventListener("click",()=>closeSheet(false));
 taskInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();saveSheet();} if(e.key==="Escape"){e.preventDefault();closeSheet(false);} });
 
-/* ============================================================
-   Matrix pointer handling — tap to add, drag to move, tap to edit
-   ============================================================ */
+/* ============================================================ Matrix gestures — tap adds, horizontal swipe changes sprint ============================================================ */
 function matrixCoords(cx,cy){ const r=matrix.getBoundingClientRect();
   return { x:clamp((cx-r.left)/r.width,0,1), y:clamp(1-(cy-r.top)/r.height,0,1) }; }
-
+const SWIPE_MIN=55, TAP_MAX=8;
+let board=null;
 matrix.addEventListener("pointerdown",e=>{
   if(e.target.closest(".dot")) return;
   if(sheet.classList.contains("visible")) return;
-  const {x,y}=matrixCoords(e.clientX,e.clientY);
-  const t=addTask(x,y); render(); openSheet(t.id,{isNew:true});
+  matrix.setPointerCapture(e.pointerId);
+  board={ id:e.pointerId, sx:e.clientX, sy:e.clientY };
 });
+matrix.addEventListener("pointerup",e=>{
+  if(!board||board.id!==e.pointerId) return;
+  const sx=board.sx, sy=board.sy; board=null;
+  const dx=e.clientX-sx, dy=e.clientY-sy, adx=Math.abs(dx), ady=Math.abs(dy);
+  if(adx>SWIPE_MIN && adx>ady*1.4){ if(dx<0) goNext(); else goPrev(); return; }
+  if(adx<=TAP_MAX && ady<=TAP_MAX){ const {x,y}=matrixCoords(sx,sy); const t=addTask(x,y); render(); openSheet(t.id,{isNew:true}); }
+});
+matrix.addEventListener("pointercancel",()=>{ board=null; });
 
 let drag=null;
 function attachDotHandlers(el,id){
@@ -371,21 +422,26 @@ function attachDotHandlers(el,id){
   el.addEventListener("pointerup",()=>{
     if(!drag||drag.id!==id) return;
     el.classList.remove("dragging"); const moved=drag.moved; drag=null;
-    if(moved){ const t=getTask(id); if(t){ t.updatedAt=Date.now(); persist(); } render(); }
-    else openSheet(id);
+    if(moved){ const t=getTask(id); if(t){ t.updatedAt=Date.now(); persist(); } render(); } else openSheet(id);
   });
   el.addEventListener("pointercancel",()=>{ if(drag&&drag.id===id){ el.classList.remove("dragging"); drag=null; } });
   el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openSheet(id); } });
 }
 
-/* ============================================================
-   Rendering
-   ============================================================ */
-function positionDot(el,t){ el.style.left=(t.x*100)+"%"; el.style.top=((1-t.y)*100)+"%"; el.classList.toggle("flip-left",t.x>.62); }
+/* keyboard arrows change sprint (desktop) */
+document.addEventListener("keydown",e=>{
+  if(sheet.classList.contains("visible")) return;
+  const tag=document.activeElement&&document.activeElement.tagName;
+  if(tag==="INPUT"||tag==="TEXTAREA") return;
+  if(e.key==="ArrowRight"){ e.preventDefault(); goNext(); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); goPrev(); }
+});
 
+/* ============================================================ Rendering ============================================================ */
+function positionDot(el,t){ el.style.left=(t.x*100)+"%"; el.style.top=((1-t.y)*100)+"%"; el.classList.toggle("flip-left",t.x>.62); }
 function render(){
   matrix.querySelectorAll(".dot").forEach(d=>d.remove());
-  state.tasks.forEach(t=>{
+  cur().tasks.forEach(t=>{
     const el=document.createElement("div");
     el.className="dot"+(t.done?" done":"");
     el.setAttribute("role","button"); el.setAttribute("tabindex","0");
@@ -394,15 +450,18 @@ function render(){
     el.appendChild(lbl); positionDot(el,t);
     matrix.appendChild(el); attachDotHandlers(el,t.id);
   });
-  countEl.textContent=state.tasks.length;
-  hint.style.display=state.tasks.length===0?"block":"none";
+  countEl.textContent=cur().tasks.length;
+  hint.style.display=cur().tasks.length===0?"block":"none";
+  sprintLabel.textContent="Sprint "+cur().n;
+  prevBtn.disabled=state.current===0;
+  nextBtn.classList.toggle("create",state.current===state.sprints.length-1);
   renderList();
 }
 function renderList(){
   const order=["do","plan","delegate","drop"];
   const groups={do:[],plan:[],delegate:[],drop:[]};
-  state.tasks.forEach(t=>groups[quadKey(t.x,t.y)].push(t));
-  if(state.tasks.length===0){ listScroll.innerHTML='<div class="empty">No tasks yet.<br>Switch to Matrix and tap to drop one.</div>'; return; }
+  cur().tasks.forEach(t=>groups[quadKey(t.x,t.y)].push(t));
+  if(cur().tasks.length===0){ listScroll.innerHTML='<div class="empty">No tasks in this sprint.<br>Switch to Matrix and tap to drop one.</div>'; return; }
   let html="";
   order.forEach(key=>{
     const items=groups[key]; if(!items.length) return;
@@ -417,9 +476,7 @@ function renderList(){
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-/* ============================================================
-   View toggle
-   ============================================================ */
+/* ============================================================ View toggle ============================================================ */
 function showMatrixView(){ listView.classList.remove("show"); listView.setAttribute("aria-hidden","true");
   tabMatrix.classList.add("active"); tabMatrix.setAttribute("aria-selected","true");
   tabList.classList.remove("active"); tabList.setAttribute("aria-selected","false"); }
@@ -429,14 +486,12 @@ function showListView(){ renderList(); listView.classList.add("show"); listView.
 tabMatrix.addEventListener("click",showMatrixView);
 tabList.addEventListener("click",showListView);
 
-/* ============================================================
-   Boot
-   ============================================================ */
+/* ============================================================ Boot ============================================================ */
 render();
-if(Store.backend==="memory") hint.textContent="preview mode · changes won't be saved here · open or serve the file to persist";
+if(Store.backend==="memory") hint.innerHTML="preview mode · changes won't be saved here";
 
 if("serviceWorker" in navigator){
-  const ok = location.protocol==="https:" || ["localhost","127.0.0.1"].includes(location.hostname);
+  const ok=location.protocol==="https:"||["localhost","127.0.0.1"].includes(location.hostname);
   if(ok) window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
 }
 </script>
