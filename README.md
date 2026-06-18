@@ -1,25 +1,28 @@
 # kaef.life — priority by position
 
-An Eisenhower-style task matrix you run in **sprints**. Tap the canvas to drop a task; its **position is its priority** — horizontal = less urgent → urgent, vertical = less important → important. Mark a task done and it stays on the board, struck through. Everything lives on the device; each install gets a random 5-digit id.
+An Eisenhower-style task matrix you run in **sprints**. Tap to drop a task; position = priority (horizontal: less urgent → urgent, vertical: less important → important). Private, on-device; each install gets a random 5-digit id.
 
 ## The matrix
-Fills the screen as an **adaptive rectangle** (portrait or landscape) with a small frame, using as much space as the device gives it. Dot positions are stored as fractions, so they hold their meaning at any aspect ratio.
+Fills the screen as an **adaptive rectangle** (portrait or landscape) with a frame, using all available space. Positions are stored as fractions, so they hold at any aspect ratio.
 
-## Sprints
-- **Forward** — swipe left, press the right arrow (keyboard `→`), or tap `›`. From the latest sprint this **starts a new one**: every *incomplete* task carries over with importance and urgency each reduced by 10 points (they've aged, so they shift toward less / less). Completed tasks stay behind in the finished sprint as a record.
-- **Back** — swipe right, press `←`, or tap `‹` to review earlier sprints.
-- New-sprint creation shows an **Undo** for a few seconds.
+## Sprints & task identity
+- The **current sprint is the only editable one.** Tasks there are single live entities — editing, moving, completing, or deleting acts on the one object.
+- **Past sprints are frozen, read-only history.** When you start a new sprint, the current one closes: a snapshot of every task is kept as a record (done = strikethrough, unfinished = "carried"). In a closed sprint you can look but not touch.
+- **Incomplete tasks move forward keeping the same identity** (same id), with importance and urgency each reduced by 10 points. **Completed tasks stay behind** as a frozen record and don't carry over.
+- **List view** shows the current sprint's live tasks, or a past sprint's frozen records (strikethrough for done, "carried" for slipped).
 
-(Tapping the matrix adds a task; a deliberate horizontal swipe changes sprint — they're separated by movement distance so they don't collide.)
+## Navigating / starting a sprint
+- Forward — swipe left, press `→`, or tap `›`. From the latest sprint this opens a **confirmation** showing exactly what carries over vs. what freezes; confirm to start.
+- Back — swipe right, press `←`, or tap `‹` to review frozen sprints.
 
 ## Files
-`index.html` (the whole app), `manifest.webmanifest`, `service-worker.js`, `icons/`, and `bichradio-light.css` (the design system, standalone).
+`index.html` (the whole app), `manifest.webmanifest`, `service-worker.js`, `icons/`, `bichradio-light.css`.
 
-## Run / deploy
-Open `index.html` directly for a quick look. For install + offline, serve over HTTPS (you're on Vercel — push to the production branch and it deploys). When you ship an update, bump the cache name in `service-worker.js` (currently `kaef-shell-v2`) so returning visitors don't get a stale cached shell.
+## Deploy (Vercel)
+Push to your production branch. When you ship updates, bump the cache name in `service-worker.js` (currently `kaef-shell-v3`) so returning visitors don't load a stale shell.
 
-## Storage
-`localStorage` behind a small `Store` interface; falls back to in-memory if blocked. Old single-board saves auto-migrate to Sprint 1 on first load.
+## Storage & migration
+`localStorage` behind a small `Store` interface (in-memory fallback if blocked). Old saves auto-migrate: a single board becomes Sprint 1; any prior multi-sprint data freezes earlier sprints into history and keeps the latest open. The storage key never changes, so existing users keep their data.
 
 ## Postponed
-Cross-device sync and shareable links. The app only calls `Store.load()` / `Store.save(state)`, so they slot into the storage layer later without a rewrite.
+Cross-device sync and shareable links — they slot into the `Store` layer later without an app rewrite.

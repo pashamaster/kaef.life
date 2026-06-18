@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>kaef.life — priority by position</title>
-<meta name="description" content="Plot tasks on an importance / urgency matrix, run them in sprints. Private, on-device." />
+<meta name="description" content="Plot tasks on an importance / urgency matrix and run them in sprints. Private, on-device." />
 <meta name="theme-color" content="#f5f2ea" />
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,7 +17,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet" />
 <style>
-/* ============================================================ BICHRADIO — LIGHT ============================================================ */
 :root{
   --bg:#f5f2ea; --bg-elevated:#efe9da; --surface:#fbf9f3;
   --border:rgba(38,33,26,.12); --border-accent:rgba(160,120,50,.30);
@@ -54,7 +53,6 @@ body{-webkit-tap-highlight-color:transparent}
 @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pop{0%{transform:translate(-50%,-50%) scale(0)}70%{transform:translate(-50%,-50%) scale(1.18)}100%{transform:translate(-50%,-50%) scale(1)}}
 
-/* ============================================================ LAYOUT ============================================================ */
 .app-shell{height:100dvh;display:flex;flex-direction:column;
   padding-top:max(env(safe-area-inset-top,0px),0px);padding-bottom:max(env(safe-area-inset-bottom,0px),0px);
   padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
@@ -67,12 +65,12 @@ body{-webkit-tap-highlight-color:transparent}
 .count{font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--subtle)}
 .count b{color:var(--accent-ink);font-weight:500}
 
-/* Stage fills the space; the matrix fills the stage as a rectangle with a frame */
 .stage{flex:1;display:flex;position:relative;min-height:0;padding:var(--space-md)}
 .matrix-wrap{position:relative;width:100%;height:100%}
 .matrix{position:absolute;inset:0;touch-action:none;cursor:crosshair;overflow:visible;
   border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 12px 40px rgba(38,33,26,.06)}
+.matrix.readonly{cursor:default}
 .matrix::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
   background:radial-gradient(120% 120% at 100% 0%,var(--accent-dim) 0%,transparent 42%)}
 .axis{position:absolute;background:var(--accent);opacity:.7;pointer-events:none}
@@ -93,6 +91,8 @@ body{-webkit-tap-highlight-color:transparent}
 .dot:active{cursor:grabbing}
 .dot.dragging{z-index:20;box-shadow:0 4px 14px rgba(38,33,26,.3)}
 .dot.done{background:var(--done-fill);border-color:rgba(38,33,26,.4)}
+.dot.record{cursor:default}
+.dot.carried{opacity:.7}
 .dot-label{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:.62rem;color:var(--text);
   background:var(--bg);padding:1px 6px;border-radius:var(--radius-sm);border:1px solid var(--border);
   white-space:nowrap;max-width:46vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
@@ -103,25 +103,22 @@ body{-webkit-tap-highlight-color:transparent}
   color:var(--muted);text-align:center;text-transform:uppercase;pointer-events:none;
   background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;line-height:1.8}
 
-/* ── DOCK: sprint pager + view toggle ─────────────────────── */
-.dock{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-sm);
-  padding:var(--space-md) var(--space-lg) var(--space-lg)}
+.dock{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-sm);padding:var(--space-md) var(--space-lg) var(--space-lg)}
 .pager{display:inline-flex;align-items:center;gap:var(--space-xs)}
-.btn-nav{font-family:var(--font-mono);font-size:1.1rem;line-height:1;background:var(--surface);
+.btn-nav{position:relative;font-family:var(--font-mono);font-size:1.1rem;line-height:1;background:var(--surface);
   border:1px solid var(--border);color:var(--muted);border-radius:var(--radius-sm);
   min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--ease)}
 .btn-nav:hover{border-color:var(--accent);color:var(--accent-ink)}
 .btn-nav:active{transform:scale(.94)}
 .btn-nav:disabled{opacity:.3;cursor:not-allowed}
 .btn-nav.create{border-color:var(--border-accent);color:var(--accent-ink)}
-.btn-nav.create::after{content:'+';position:absolute;font-size:.55rem;transform:translate(11px,-10px)}
-.sprint-label{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);
-  min-width:62px;text-align:center;white-space:nowrap}
+.btn-nav.create::after{content:'+';position:absolute;font-size:.55rem;top:5px;right:7px;line-height:1}
+.sprint-label{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);min-width:88px;text-align:center;white-space:nowrap}
+.sprint-label.closed{color:var(--muted)}
 .seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
-.seg .btn{border:none;border-radius:0;background:transparent;min-width:92px}
+.seg .btn{border:none;border-radius:0;background:transparent;min-width:80px}
 .seg .btn+.btn{border-left:1px solid var(--border)}
 
-/* ── LIST VIEW ────────────────────────────────────────────── */
 .list-view{position:absolute;inset:0;background:var(--bg);z-index:8;display:none;flex-direction:column;animation:fadein .25s ease both}
 .list-view.show{display:flex}
 .list-scroll{flex:1;overflow-y:auto;padding:var(--space-sm) var(--space-lg) var(--space-xl);-webkit-overflow-scrolling:touch}
@@ -132,15 +129,16 @@ body{-webkit-tap-highlight-color:transparent}
 .row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px;
   cursor:pointer;color:var(--text);font-family:var(--font-mono);font-size:.8rem;transition:border-color var(--ease)}
-.row:hover{border-color:var(--border-accent)}
+.row.ro{cursor:default}
+.row:not(.ro):hover{border-color:var(--border-accent)}
 .row .marker{width:10px;height:10px;border-radius:50%;background:var(--accent);border:1px solid var(--accent-ink);flex-shrink:0}
 .row.done .marker{background:var(--done-fill);border-color:rgba(38,33,26,.4)}
+.row.carried .marker{opacity:.6}
 .row.done .row-label{color:var(--muted);text-decoration:line-through}
 .row-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row-meta{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle)}
 .empty{padding:var(--space-xl) var(--space-md);text-align:center;color:var(--subtle);font-size:.75rem;letter-spacing:.06em;line-height:2}
 
-/* ── EDIT SHEET ───────────────────────────────────────────── */
 .scrim{position:fixed;inset:0;background:rgba(38,33,26,.18);z-index:998;display:none}
 .scrim.show{display:block}
 .sheet{display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;background:var(--bg-elevated);
@@ -151,6 +149,8 @@ body{-webkit-tap-highlight-color:transparent}
 .sheet-quad{display:flex;flex-direction:column;gap:2px}
 .sheet-quad .name{font-family:var(--font-serif);font-style:italic;font-size:1.15rem;color:var(--accent-ink)}
 .sheet-quad .desc{font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sheet-title{font-family:var(--font-serif);font-style:italic;font-size:1.2rem;color:var(--accent-ink)}
+.sheet-sub{font-size:.64rem;letter-spacing:.04em;color:var(--muted);line-height:1.85}
 .task-input{width:100%;font-family:var(--font-mono);font-size:1rem;color:var(--text);background:var(--surface);
   border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;outline:none;transition:border-color var(--ease)}
 .task-input:focus{border-color:var(--accent)}
@@ -162,25 +162,21 @@ body{-webkit-tap-highlight-color:transparent}
 .done-toggle.on{color:var(--accent-ink);border-color:var(--accent);background:var(--accent-dim)}
 .done-toggle .box{width:14px;height:14px;border:1.5px solid currentColor;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px}
 
-/* ── TOAST (with optional undo) ───────────────────────────── */
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);transform:translateX(-50%) translateY(10px);
   display:flex;align-items:center;gap:14px;background:var(--text);color:var(--bg);font-size:.62rem;letter-spacing:.1em;
   text-transform:uppercase;padding:11px 16px;border-radius:var(--radius-sm);z-index:1001;opacity:0;pointer-events:none;
-  transition:opacity .2s,transform .2s;max-width:90vw}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-.toast-action{background:none;border:1px solid var(--bg);color:var(--bg);font:inherit;letter-spacing:.12em;
-  padding:5px 10px;border-radius:var(--radius-sm);cursor:pointer}
+  transition:opacity .2s,transform .2s;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 @media (max-width:380px){
-  .seg .btn{min-width:64px} .brand h1{font-size:1.3rem}
-  .sprint-label{min-width:48px;font-size:.55rem} .btn-nav{min-width:40px} .dock{padding-left:var(--space-md);padding-right:var(--space-md)}
+  .seg .btn{min-width:62px} .brand h1{font-size:1.3rem}
+  .sprint-label{min-width:70px;font-size:.55rem} .btn-nav{min-width:40px} .dock{padding-left:var(--space-md);padding-right:var(--space-md)}
 }
 </style>
 </head>
 <body class="grain">
 <div class="app-shell">
-
   <header class="top">
     <div class="brand">
       <h1>kaef.life</h1>
@@ -188,7 +184,7 @@ body{-webkit-tap-highlight-color:transparent}
     </div>
     <div class="top-right">
       <div class="id-chip">id <b id="userId">—</b></div>
-      <span class="count"><b id="countNum">0</b> tasks</span>
+      <span class="count"><b id="countNum">0</b> <span id="countWord">tasks</span></span>
     </div>
   </header>
 
@@ -210,7 +206,6 @@ body{-webkit-tap-highlight-color:transparent}
       </div>
       <div class="hint" id="hint">tap to add a task<br>swipe to change sprint</div>
     </div>
-
     <section class="list-view" id="listView" aria-hidden="true">
       <div class="list-scroll" id="listScroll"></div>
     </section>
@@ -230,6 +225,8 @@ body{-webkit-tap-highlight-color:transparent}
 </div>
 
 <div class="scrim" id="scrim"></div>
+
+<!-- edit / add task sheet -->
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Task">
   <div class="sheet-head">
     <div class="sheet-quad">
@@ -247,7 +244,18 @@ body{-webkit-tap-highlight-color:transparent}
   </div>
 </div>
 
-<div class="toast" id="toast"><span id="toastMsg"></span><button class="toast-action" id="toastAction" style="display:none"></button></div>
+<!-- new-sprint confirmation -->
+<div class="sheet" id="confirmSheet" role="dialog" aria-modal="true" aria-label="Start a new sprint">
+  <div class="sheet-head"><span class="sheet-title">Start Sprint <span id="confirmN">2</span>?</span></div>
+  <p class="sheet-sub" id="confirmBody"></p>
+  <div class="sheet-actions">
+    <button class="btn" id="confirmCancel">Cancel</button>
+    <span class="grow"></span>
+    <button class="btn btn-accent" id="confirmStart">Start sprint</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
 
 <script>
 "use strict";
@@ -269,23 +277,48 @@ const Store = (() => {
 const clamp=(n,lo,hi)=>Math.min(hi,Math.max(lo,n));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const genUserId=()=>String(Math.floor(10000+Math.random()*90000));
-const DROP=0.10; // sprint carry-over: importance & urgency each fall by 10 points
+const DROP=0.10; // carry-over: importance & urgency each fall by 10 points
 
-/* ── State + migration (v1 single board → v2 sprints) ──────── */
-function newSprint(n,tasks){ return { id:uid(), n, createdAt:Date.now(), tasks:tasks||[] }; }
-function freshState(){ return { v:2, userId:genUserId(), sprints:[newSprint(1)], current:0 }; }
+/* ============================================================
+   Model (v3): one OPEN sprint with live tasks; past sprints are
+   FROZEN with immutable records. A live task moves forward by
+   reference (same id) until completed; completion/close freezes
+   a snapshot record.
+   ============================================================ */
+function newSprint(n){ return { id:uid(), n, createdAt:Date.now(), closedAt:null, tasks:[], records:[] }; }
+function freshState(){ const s=newSprint(1); return { v:3, userId:genUserId(), sprints:[s], view:0 }; }
+function freezeRecords(tasks){ return tasks.map(t=>({ id:uid(), label:t.label, x:t.x, y:t.y,
+  status:t.done?"done":"carried", frozenAt:Date.now(), lineage:t.id })); }
+
 function migrate(s){
   if(!s) return freshState();
-  if(Array.isArray(s.sprints)){ if(typeof s.current!=="number") s.current=0; if(!s.userId) s.userId=genUserId();
-    s.current=clamp(s.current,0,s.sprints.length-1); return s; }
-  const tasks=Array.isArray(s.tasks)?s.tasks:[];           // old v1 shape
-  return { v:2, userId:s.userId||genUserId(), sprints:[newSprint(1,tasks)], current:0 };
+  if(!s.sprints && Array.isArray(s.tasks)){                 // v1 -> wrap
+    s = { v:2, userId:s.userId, sprints:[{ id:uid(), n:1, createdAt:Date.now(), tasks:s.tasks }], current:0 };
+  }
+  if(!Array.isArray(s.sprints)) return freshState();
+  if(!s.userId) s.userId = genUserId();
+  const last = s.sprints.length-1;
+  s.sprints.forEach((sp,i)=>{
+    if(!Array.isArray(sp.records)) sp.records=[];
+    if(typeof sp.closedAt==="undefined") sp.closedAt=null;
+    if(!Array.isArray(sp.tasks)) sp.tasks=[];
+    if(i<last){                                             // older sprints freeze
+      if(sp.tasks.length && sp.records.length===0) sp.records = freezeRecords(sp.tasks);
+      sp.tasks=[]; sp.closedAt = sp.closedAt || Date.now();
+    } else { sp.closedAt=null; }
+  });
+  s.v=3; delete s.current; s.view=last;
+  return s;
 }
-let state=migrate(Store.load());
+
+let state = migrate(Store.load());
 function persist(){ Store.save(state); }
 persist();
 
-const cur=()=>state.sprints[state.current];
+const lastIndex = ()=>state.sprints.length-1;
+const isOpenView = ()=>state.view===lastIndex();
+const viewSprint = ()=>state.sprints[state.view];
+const openSprint = ()=>state.sprints[lastIndex()];
 
 const QUADS={
   do:{name:"Do",desc:"important & urgent"},
@@ -297,7 +330,7 @@ function quadKey(x,y){ const imp=y>=.5,urg=x>=.5; if(imp&&urg)return"do"; if(imp
 
 /* ============================================================ Elements ============================================================ */
 const $=id=>document.getElementById(id);
-const matrix=$("matrix"), hint=$("hint"), userIdEl=$("userId"), countEl=$("countNum");
+const matrix=$("matrix"), hint=$("hint"), userIdEl=$("userId"), countEl=$("countNum"), countWord=$("countWord");
 const listView=$("listView"), listScroll=$("listScroll");
 const tabMatrix=$("tabMatrix"), tabList=$("tabList");
 const scrim=$("scrim"), sheet=$("sheet"), taskInput=$("taskInput");
@@ -305,68 +338,73 @@ const quadName=$("quadName"), quadDesc=$("quadDesc");
 const doneToggle=$("doneToggle"), doneBox=$("doneBox"), doneText=$("doneText");
 const deleteBtn=$("deleteBtn"), cancelBtn=$("cancelBtn"), saveBtn=$("saveBtn");
 const prevBtn=$("prevSprint"), nextBtn=$("nextSprint"), sprintLabel=$("sprintLabel");
-const toastEl=$("toast"), toastMsg=$("toastMsg"), toastAction=$("toastAction");
+const confirmSheet=$("confirmSheet"), confirmN=$("confirmN"), confirmBody=$("confirmBody"), confirmStart=$("confirmStart"), confirmCancel=$("confirmCancel");
+const toastEl=$("toast"), toastMsg=$("toastMsg");
 userIdEl.textContent=state.userId;
 
 let toastTimer=null;
-function toast(msg,actionLabel,actionFn){
-  toastMsg.textContent=msg;
-  if(actionLabel&&actionFn){ toastAction.textContent=actionLabel; toastAction.style.display="";
-    toastAction.onclick=()=>{ actionFn(); hideToast(); }; }
-  else { toastAction.style.display="none"; toastAction.onclick=null; }
-  toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(hideToast,4000);
-}
-function hideToast(){ toastEl.classList.remove("show"); }
+function toast(msg){ toastMsg.textContent=msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove("show"),2400); }
 
-/* ============================================================ Task helpers (operate on the current sprint) ============================================================ */
-function getTask(id){ return cur().tasks.find(t=>t.id===id); }
-function removeTask(id){ cur().tasks=cur().tasks.filter(t=>t.id!==id); persist(); }
+let sheetGuardUntil=0;                                   // swallows the synthesized click after a tap opens a sheet
+function guardSheet(){ sheetGuardUntil=Date.now()+350; }
+
+/* ============================================================ Task helpers (operate on the OPEN sprint only) ============================================================ */
+function getTask(id){ return openSprint().tasks.find(t=>t.id===id); }
+function removeTask(id){ const o=openSprint(); o.tasks=o.tasks.filter(t=>t.id!==id); persist(); }
 function addTask(x,y){
   const t={ id:uid(), label:"", x:clamp(x,.03,.97), y:clamp(y,.03,.97), done:false, createdAt:Date.now(), updatedAt:Date.now() };
-  cur().tasks.push(t); persist(); return t;
+  openSprint().tasks.push(t); persist(); return t;
 }
 
 /* ============================================================ Sprints ============================================================ */
+function askNewSprint(){
+  const o=openSprint();
+  const inc=o.tasks.filter(t=>!t.done).length, done=o.tasks.filter(t=>t.done).length;
+  confirmN.textContent=o.n+1;
+  confirmBody.textContent = inc>0
+    ? `Sprint ${o.n} will close and become read-only. ${inc} unfinished task${inc>1?"s":""} carry over with importance & urgency −10. ${done} done task${done!==1?"s":""} stay here as history.`
+    : `Sprint ${o.n} will close and become read-only. Nothing to carry over — Sprint ${o.n+1} starts empty.`;
+  openConfirm();
+}
 function startNewSprint(){
-  const from=cur();
-  const carried=from.tasks.filter(t=>!t.done).map(t=>({
-    id:uid(), label:t.label,
+  const o=openSprint();
+  o.records = freezeRecords(o.tasks);                    // freeze snapshot (done + carried)
+  o.closedAt = Date.now();
+  const carried = o.tasks.filter(t=>!t.done).map(t=>({   // SAME id → same entity moves forward
+    id:t.id, label:t.label,
     x:clamp(t.x-DROP,.03,.97), y:clamp(t.y-DROP,.03,.97),
-    done:false, createdAt:Date.now(), updatedAt:Date.now(), fromSprint:from.n
+    done:false, createdAt:t.createdAt, updatedAt:Date.now()
   }));
-  const n=state.sprints.reduce((m,s)=>Math.max(m,s.n),0)+1;
-  state.sprints.push(newSprint(n,carried));
-  const createdIndex=state.sprints.length-1;
-  state.current=createdIndex; persist(); render();
-  toast(`Sprint ${n} · ${carried.length} carried over`, "Undo", ()=>undoSprint(createdIndex,n));
-}
-function undoSprint(index,n){
-  if(state.sprints.length<=1) return;
-  if(index<0||index>=state.sprints.length||state.sprints[index].n!==n) return; // stale undo
-  state.sprints.splice(index,1);
-  state.current=clamp(state.current,0,state.sprints.length-1);
+  o.tasks=[];                                            // closed sprint keeps records, not live tasks
+  const fresh=newSprint(o.n+1); fresh.tasks=carried;
+  state.sprints.push(fresh);
+  state.view=lastIndex();
   persist(); render();
+  toast(`Sprint ${fresh.n} started · ${carried.length} carried over`);
 }
-function goNext(){
-  if(state.current<state.sprints.length-1){ state.current++; persist(); render(); }
-  else startNewSprint();
-}
-function goPrev(){ if(state.current>0){ state.current--; persist(); render(); } }
+function goNext(){ if(state.view<lastIndex()){ state.view++; render(); } else askNewSprint(); }
+function goPrev(){ if(state.view>0){ state.view--; render(); } }
 prevBtn.addEventListener("click",goPrev);
 nextBtn.addEventListener("click",goNext);
 
-/* ============================================================ Edit / add sheet ============================================================ */
+function openConfirm(){ if(sheet.classList.contains("visible")) hideSheet(); guardSheet(); scrim.classList.add("show"); confirmSheet.classList.add("visible"); }
+function closeConfirm(){ confirmSheet.classList.remove("visible"); if(!sheet.classList.contains("visible")) scrim.classList.remove("show"); }
+confirmCancel.addEventListener("click",closeConfirm);
+confirmStart.addEventListener("click",()=>{ closeConfirm(); startNewSprint(); });
+
+/* ============================================================ Edit / add sheet (OPEN sprint only) ============================================================ */
 let editingId=null, isNew=false;
 function openSheet(id,opts={}){
+  if(!isOpenView()) return;
   editingId=id; isNew=!!opts.isNew;
   const t=getTask(id); if(!t) return;
   const q=QUADS[quadKey(t.x,t.y)];
   quadName.textContent=q.name; quadDesc.textContent=q.desc;
   taskInput.value=t.label||""; setDoneUI(t.done);
-  scrim.classList.add("show"); sheet.classList.add("visible");
+  guardSheet(); scrim.classList.add("show"); sheet.classList.add("visible");
   setTimeout(()=>{ taskInput.focus(); if(!isNew) taskInput.select(); },60);
 }
-function hideSheet(){ sheet.classList.remove("visible"); scrim.classList.remove("show"); }
+function hideSheet(){ sheet.classList.remove("visible"); if(!confirmSheet.classList.contains("visible")) scrim.classList.remove("show"); }
 function closeSheet(commit=true){
   if(isNew&&commit===false){ const t=getTask(editingId); if(t&&!t.label.trim()) removeTask(editingId); }
   hideSheet(); editingId=null; isNew=false; render();
@@ -382,17 +420,21 @@ doneToggle.addEventListener("click",()=>{ const t=getTask(editingId); if(!t)retu
 deleteBtn.addEventListener("click",()=>{ if(editingId) removeTask(editingId); closeSheet(); });
 cancelBtn.addEventListener("click",()=>closeSheet(false));
 saveBtn.addEventListener("click",saveSheet);
-scrim.addEventListener("click",()=>closeSheet(false));
+scrim.addEventListener("click",()=>{
+  if(Date.now()<sheetGuardUntil) return;                 // ignore the synthesized post-tap click
+  if(sheet.classList.contains("visible")) closeSheet(false);
+  else if(confirmSheet.classList.contains("visible")) closeConfirm();
+});
 taskInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();saveSheet();} if(e.key==="Escape"){e.preventDefault();closeSheet(false);} });
 
-/* ============================================================ Matrix gestures — tap adds, horizontal swipe changes sprint ============================================================ */
+/* ============================================================ Matrix gestures ============================================================ */
 function matrixCoords(cx,cy){ const r=matrix.getBoundingClientRect();
   return { x:clamp((cx-r.left)/r.width,0,1), y:clamp(1-(cy-r.top)/r.height,0,1) }; }
 const SWIPE_MIN=55, TAP_MAX=8;
 let board=null;
 matrix.addEventListener("pointerdown",e=>{
-  if(e.target.closest(".dot")) return;
-  if(sheet.classList.contains("visible")) return;
+  if(isOpenView() && e.target.closest(".dot")) return;    // live dots handle their own drag
+  if(sheet.classList.contains("visible")||confirmSheet.classList.contains("visible")) return;
   matrix.setPointerCapture(e.pointerId);
   board={ id:e.pointerId, sx:e.clientX, sy:e.clientY };
 });
@@ -401,7 +443,10 @@ matrix.addEventListener("pointerup",e=>{
   const sx=board.sx, sy=board.sy; board=null;
   const dx=e.clientX-sx, dy=e.clientY-sy, adx=Math.abs(dx), ady=Math.abs(dy);
   if(adx>SWIPE_MIN && adx>ady*1.4){ if(dx<0) goNext(); else goPrev(); return; }
-  if(adx<=TAP_MAX && ady<=TAP_MAX){ const {x,y}=matrixCoords(sx,sy); const t=addTask(x,y); render(); openSheet(t.id,{isNew:true}); }
+  if(adx<=TAP_MAX && ady<=TAP_MAX){
+    if(isOpenView()){ const {x,y}=matrixCoords(sx,sy); const t=addTask(x,y); render(); openSheet(t.id,{isNew:true}); }
+    else toast(`Sprint ${viewSprint().n} is closed`);
+  }
 });
 matrix.addEventListener("pointercancel",()=>{ board=null; });
 
@@ -428,9 +473,8 @@ function attachDotHandlers(el,id){
   el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openSheet(id); } });
 }
 
-/* keyboard arrows change sprint (desktop) */
 document.addEventListener("keydown",e=>{
-  if(sheet.classList.contains("visible")) return;
+  if(sheet.classList.contains("visible")||confirmSheet.classList.contains("visible")) return;
   const tag=document.activeElement&&document.activeElement.tagName;
   if(tag==="INPUT"||tag==="TEXTAREA") return;
   if(e.key==="ArrowRight"){ e.preventDefault(); goNext(); }
@@ -440,39 +484,61 @@ document.addEventListener("keydown",e=>{
 /* ============================================================ Rendering ============================================================ */
 function positionDot(el,t){ el.style.left=(t.x*100)+"%"; el.style.top=((1-t.y)*100)+"%"; el.classList.toggle("flip-left",t.x>.62); }
 function render(){
+  const s=viewSprint(), open=isOpenView();
+  matrix.classList.toggle("readonly",!open);
   matrix.querySelectorAll(".dot").forEach(d=>d.remove());
-  cur().tasks.forEach(t=>{
+  const items = open ? s.tasks : s.records;
+  items.forEach(it=>{
     const el=document.createElement("div");
-    el.className="dot"+(t.done?" done":"");
-    el.setAttribute("role","button"); el.setAttribute("tabindex","0");
-    el.setAttribute("aria-label",(t.label||"Untitled task")+" — "+QUADS[quadKey(t.x,t.y)].name+(t.done?", done":""));
-    const lbl=document.createElement("span"); lbl.className="dot-label"; lbl.textContent=t.label||"…";
-    el.appendChild(lbl); positionDot(el,t);
-    matrix.appendChild(el); attachDotHandlers(el,t.id);
+    let cls="dot";
+    if(open){ if(it.done) cls+=" done"; }
+    else { cls+=" record "+(it.status==="done"?"done":"carried"); }
+    el.className=cls;
+    el.setAttribute("role","button"); el.setAttribute("tabindex",open?"0":"-1");
+    const status = open ? (it.done?", done":"") : (it.status==="done"?", done":", carried");
+    el.setAttribute("aria-label",(it.label||"Untitled task")+" — "+QUADS[quadKey(it.x,it.y)].name+status);
+    const lbl=document.createElement("span"); lbl.className="dot-label"; lbl.textContent=it.label||"…";
+    el.appendChild(lbl); positionDot(el,it);
+    matrix.appendChild(el);
+    if(open) attachDotHandlers(el,it.id);
   });
-  countEl.textContent=cur().tasks.length;
-  hint.style.display=cur().tasks.length===0?"block":"none";
-  sprintLabel.textContent="Sprint "+cur().n;
-  prevBtn.disabled=state.current===0;
-  nextBtn.classList.toggle("create",state.current===state.sprints.length-1);
+  countEl.textContent=items.length;
+  countWord.textContent=open?"tasks":"records";
+  if(open){ hint.innerHTML="tap to add a task<br>swipe to change sprint"; hint.style.display=s.tasks.length===0?"block":"none"; }
+  else { hint.textContent="no records in this sprint"; hint.style.display=s.records.length===0?"block":"none"; }
+  sprintLabel.textContent="Sprint "+s.n+(open?"":" · closed");
+  sprintLabel.classList.toggle("closed",!open);
+  prevBtn.disabled=state.view===0;
+  nextBtn.classList.toggle("create",open);
   renderList();
 }
 function renderList(){
+  const s=viewSprint(), open=isOpenView();
+  const items = open ? s.tasks : s.records;
   const order=["do","plan","delegate","drop"];
   const groups={do:[],plan:[],delegate:[],drop:[]};
-  cur().tasks.forEach(t=>groups[quadKey(t.x,t.y)].push(t));
-  if(cur().tasks.length===0){ listScroll.innerHTML='<div class="empty">No tasks in this sprint.<br>Switch to Matrix and tap to drop one.</div>'; return; }
+  items.forEach(it=>groups[quadKey(it.x,it.y)].push(it));
+  if(items.length===0){ listScroll.innerHTML='<div class="empty">'+(open?'No tasks in this sprint.<br>Switch to Matrix and tap to drop one.':'No records — this sprint closed empty.')+'</div>'; return; }
   let html="";
   order.forEach(key=>{
-    const items=groups[key]; if(!items.length) return;
-    items.sort((a,b)=>(a.done-b.done)||(b.updatedAt-a.updatedAt));
+    const list=groups[key]; if(!list.length) return;
+    list.sort((a,b)=>{
+      const ad=open?(a.done?1:0):(a.status==="done"?1:0), bd=open?(b.done?1:0):(b.status==="done"?1:0);
+      return (ad-bd)||((b.updatedAt||b.frozenAt||0)-(a.updatedAt||a.frozenAt||0));
+    });
     const q=QUADS[key];
     html+='<div class="group-head"><span class="swatch"></span><h3>'+q.name+'</h3><span>'+q.desc+'</span></div>';
-    items.forEach(t=>{ html+='<button class="row '+(t.done?"done":"")+'" data-id="'+t.id+'"><span class="marker"></span>'
-      +'<span class="row-label">'+escapeHtml(t.label||"Untitled task")+'</span><span class="row-meta">'+q.name+'</span></button>'; });
+    list.forEach(it=>{
+      const isDone = open ? it.done : it.status==="done";
+      const carried = !open && it.status==="carried";
+      const meta = open ? q.name : (carried?"carried":"done");
+      const cls = "row "+(open?"":"ro ")+(isDone?"done ":"")+(carried?"carried":"");
+      html+='<button class="'+cls.trim()+'"'+(open?(' data-id="'+it.id+'"'):'')+'><span class="marker"></span>'
+        +'<span class="row-label">'+escapeHtml(it.label||"Untitled task")+'</span><span class="row-meta">'+meta+'</span></button>';
+    });
   });
   listScroll.innerHTML=html;
-  listScroll.querySelectorAll(".row").forEach(row=>row.addEventListener("click",()=>{ showMatrixView(); openSheet(row.dataset.id); }));
+  if(open) listScroll.querySelectorAll(".row").forEach(row=>row.addEventListener("click",()=>{ showMatrixView(); openSheet(row.dataset.id); }));
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
