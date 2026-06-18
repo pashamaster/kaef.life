@@ -126,17 +126,36 @@ body{-webkit-tap-highlight-color:transparent}
 .group-head .swatch{width:9px;height:9px;border-radius:50%;background:var(--accent);border:1px solid var(--accent-ink);flex-shrink:0}
 .group-head h3{font-family:var(--font-serif);font-style:italic;font-size:1.05rem;color:var(--text);font-weight:500}
 .group-head span{font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--subtle)}
-.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);
-  border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px;
-  cursor:pointer;color:var(--text);font-family:var(--font-mono);font-size:.8rem;transition:border-color var(--ease)}
-.row.ro{cursor:default}
-.row:not(.ro):hover{border-color:var(--border-accent)}
+.row{display:flex;align-items:stretch;width:100%;background:var(--surface);overflow:hidden;
+  border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;
+  color:var(--text);font-family:var(--font-mono);font-size:.8rem;transition:border-color var(--ease)}
+.row:hover{border-color:var(--border-accent)}
+.row-main{flex:1;display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;text-align:left;
+  background:none;border:none;color:inherit;font:inherit;cursor:pointer}
+.row.ro .row-main{cursor:default}
 .row .marker{width:10px;height:10px;border-radius:50%;background:var(--accent);border:1px solid var(--accent-ink);flex-shrink:0}
 .row.done .marker{background:var(--done-fill);border-color:rgba(38,33,26,.4)}
 .row.carried .marker{opacity:.6}
 .row.done .row-label{color:var(--muted);text-decoration:line-through}
 .row-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row-meta{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle)}
+.row-meta{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle);flex-shrink:0}
+.row-del{flex-shrink:0;width:42px;border:none;border-left:1px solid var(--border);background:none;
+  color:var(--subtle);font-size:1.1rem;line-height:1;cursor:pointer;transition:all var(--ease)}
+.row-del:hover{background:rgba(192,57,43,.08);color:var(--red)}
+.sprint-head{display:flex;align-items:center;gap:10px;margin:var(--space-lg) 0 var(--space-sm)}
+.sprint-head:first-child{margin-top:var(--space-sm)}
+.sprint-head h3{font-family:var(--font-serif);font-style:italic;font-size:1.1rem;color:var(--text);font-weight:500}
+.sprint-head .stat{font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--subtle)}
+.sprint-head .stat.current{color:var(--accent-ink)}
+.sprint-head .grow{flex:1}
+.sprint-del{font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--red);background:none;
+  border:1px solid rgba(192,57,43,.25);border-radius:var(--radius-sm);padding:7px 11px;cursor:pointer}
+.sprint-del:hover{border-color:var(--red);background:rgba(192,57,43,.07)}
+.empty-closed{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;flex-direction:column;
+  align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;text-align:center}
+.empty-closed.show{display:flex}
+.empty-closed span{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.empty-closed b{color:var(--accent-ink);font-weight:500}
 .empty{padding:var(--space-xl) var(--space-md);text-align:center;color:var(--subtle);font-size:.75rem;letter-spacing:.06em;line-height:2}
 
 .scrim{position:fixed;inset:0;background:rgba(38,33,26,.18);z-index:998;display:none}
@@ -205,6 +224,10 @@ body{-webkit-tap-highlight-color:transparent}
         <span class="quad q-deleg">delegate</span>
       </div>
       <div class="hint" id="hint">tap to add a task<br>swipe to change sprint</div>
+      <div class="empty-closed" id="emptyClosed">
+        <span>Sprint <b id="ecN"></b> · closed · empty</span>
+        <button class="btn btn-danger" id="ecDelete">Delete sprint</button>
+      </div>
     </div>
     <section class="list-view" id="listView" aria-hidden="true">
       <div class="list-scroll" id="listScroll"></div>
@@ -338,6 +361,7 @@ const quadName=$("quadName"), quadDesc=$("quadDesc");
 const doneToggle=$("doneToggle"), doneBox=$("doneBox"), doneText=$("doneText");
 const deleteBtn=$("deleteBtn"), cancelBtn=$("cancelBtn"), saveBtn=$("saveBtn");
 const prevBtn=$("prevSprint"), nextBtn=$("nextSprint"), sprintLabel=$("sprintLabel");
+const emptyClosed=$("emptyClosed"), ecN=$("ecN"), ecDelete=$("ecDelete");
 const confirmSheet=$("confirmSheet"), confirmN=$("confirmN"), confirmBody=$("confirmBody"), confirmStart=$("confirmStart"), confirmCancel=$("confirmCancel");
 const toastEl=$("toast"), toastMsg=$("toastMsg");
 userIdEl.textContent=state.userId;
@@ -386,6 +410,26 @@ function goNext(){ if(state.view<lastIndex()){ state.view++; render(); } else as
 function goPrev(){ if(state.view>0){ state.view--; render(); } }
 prevBtn.addEventListener("click",goPrev);
 nextBtn.addEventListener("click",goNext);
+
+/* Delete one task or record (works in any sprint, open or closed) */
+function deleteItem(si,id){
+  const sp=state.sprints[si]; if(!sp) return;
+  if(si===lastIndex()) sp.tasks=sp.tasks.filter(t=>t.id!==id);
+  else sp.records=sp.records.filter(r=>r.id!==id);
+  persist(); render(); toast("Deleted");
+}
+/* Delete an empty, closed sprint and renumber the rest sequentially */
+function deleteSprint(si){
+  if(si<0||si>=state.sprints.length) return;
+  if(si===lastIndex()) return;                       // never the open sprint
+  if(state.sprints[si].records.length!==0) return;   // only empty closed sprints
+  state.sprints.splice(si,1);
+  state.sprints.forEach((s,i)=>{ s.n=i+1; });        // recount: 1,2,3,…
+  if(si<state.view) state.view--;                    // keep the same sprint in view
+  state.view=clamp(state.view,0,lastIndex());
+  persist(); render(); toast("Sprint removed");
+}
+ecDelete.addEventListener("click",()=>deleteSprint(state.view));
 
 function openConfirm(){ if(sheet.classList.contains("visible")) hideSheet(); guardSheet(); scrim.classList.add("show"); confirmSheet.classList.add("visible"); }
 function closeConfirm(){ confirmSheet.classList.remove("visible"); if(!sheet.classList.contains("visible")) scrim.classList.remove("show"); }
@@ -505,7 +549,10 @@ function render(){
   countEl.textContent=items.length;
   countWord.textContent=open?"tasks":"records";
   if(open){ hint.innerHTML="tap to add a task<br>swipe to change sprint"; hint.style.display=s.tasks.length===0?"block":"none"; }
-  else { hint.textContent="no records in this sprint"; hint.style.display=s.records.length===0?"block":"none"; }
+  else { hint.style.display="none"; }
+  const emptyClosedView = !open && s.records.length===0;
+  emptyClosed.classList.toggle("show",emptyClosedView);
+  if(emptyClosedView) ecN.textContent=s.n;
   sprintLabel.textContent="Sprint "+s.n+(open?"":" · closed");
   sprintLabel.classList.toggle("closed",!open);
   prevBtn.disabled=state.view===0;
@@ -513,32 +560,47 @@ function render(){
   renderList();
 }
 function renderList(){
-  const s=viewSprint(), open=isOpenView();
-  const items = open ? s.tasks : s.records;
   const order=["do","plan","delegate","drop"];
-  const groups={do:[],plan:[],delegate:[],drop:[]};
-  items.forEach(it=>groups[quadKey(it.x,it.y)].push(it));
-  if(items.length===0){ listScroll.innerHTML='<div class="empty">'+(open?'No tasks in this sprint.<br>Switch to Matrix and tap to drop one.':'No records — this sprint closed empty.')+'</div>'; return; }
+  const openIdx=lastIndex();
   let html="";
-  order.forEach(key=>{
-    const list=groups[key]; if(!list.length) return;
-    list.sort((a,b)=>{
+  for(let si=state.sprints.length-1; si>=0; si--){      // newest sprint first
+    const sp=state.sprints[si], open=(si===openIdx);
+    const items = open ? sp.tasks : sp.records;
+    html+='<div class="sprint-head"><h3>Sprint '+sp.n+'</h3>'
+        + '<span class="stat'+(open?" current":"")+'">'+(open?"current":"closed")+' · '+items.length+'</span>'
+        + '<span class="grow"></span>'
+        + ((!open && items.length===0) ? '<button class="sprint-del" data-si="'+si+'">Delete sprint</button>' : '')
+        + '</div>';
+    if(items.length===0){ if(open) html+='<div class="empty">No tasks yet.</div>'; continue; }
+    const sorted=items.slice().sort((a,b)=>{
+      const qa=order.indexOf(quadKey(a.x,a.y)), qb=order.indexOf(quadKey(b.x,b.y));
+      if(qa!==qb) return qa-qb;
       const ad=open?(a.done?1:0):(a.status==="done"?1:0), bd=open?(b.done?1:0):(b.status==="done"?1:0);
       return (ad-bd)||((b.updatedAt||b.frozenAt||0)-(a.updatedAt||a.frozenAt||0));
     });
-    const q=QUADS[key];
-    html+='<div class="group-head"><span class="swatch"></span><h3>'+q.name+'</h3><span>'+q.desc+'</span></div>';
-    list.forEach(it=>{
+    sorted.forEach(it=>{
       const isDone = open ? it.done : it.status==="done";
       const carried = !open && it.status==="carried";
-      const meta = open ? q.name : (carried?"carried":"done");
-      const cls = "row "+(open?"":"ro ")+(isDone?"done ":"")+(carried?"carried":"");
-      html+='<button class="'+cls.trim()+'"'+(open?(' data-id="'+it.id+'"'):'')+'><span class="marker"></span>'
-        +'<span class="row-label">'+escapeHtml(it.label||"Untitled task")+'</span><span class="row-meta">'+meta+'</span></button>';
+      const q=QUADS[quadKey(it.x,it.y)].name;
+      const meta=q+(carried?" · carried":"")+(isDone&&!open?" · done":"");
+      const cls="row "+(open?"":"ro ")+(isDone?"done ":"")+(carried?"carried":"");
+      html+='<div class="'+cls.trim()+'" data-si="'+si+'" data-id="'+it.id+'">'
+          + '<button class="row-main" data-act="open"><span class="marker"></span>'
+          + '<span class="row-label">'+escapeHtml(it.label||"Untitled task")+'</span>'
+          + '<span class="row-meta">'+meta+'</span></button>'
+          + '<button class="row-del" data-act="del" aria-label="Delete">×</button></div>';
+    });
+  }
+  listScroll.innerHTML=html;
+  listScroll.querySelectorAll(".sprint-del").forEach(b=>b.addEventListener("click",()=>deleteSprint(+b.dataset.si)));
+  listScroll.querySelectorAll(".row").forEach(row=>{
+    const si=+row.dataset.si, id=row.dataset.id, open=(si===openIdx);
+    row.querySelector('[data-act="del"]').addEventListener("click",e=>{ e.stopPropagation(); deleteItem(si,id); });
+    row.querySelector('[data-act="open"]').addEventListener("click",()=>{
+      if(open){ state.view=openIdx; showMatrixView(); render(); openSheet(id); }
+      else { state.view=si; showMatrixView(); render(); }
     });
   });
-  listScroll.innerHTML=html;
-  if(open) listScroll.querySelectorAll(".row").forEach(row=>row.addEventListener("click",()=>{ showMatrixView(); openSheet(row.dataset.id); }));
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 

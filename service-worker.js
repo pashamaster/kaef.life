@@ -1,6 +1,6 @@
 /* Matrix — offline app shell.
    Cache-first for the shell, network-first nothing (no backend in the MVP). */
-const CACHE = "kaef-shell-v3";
+const CACHE = "kaef-shell-v4";
 const SHELL = [
   ".",
   "index.html",
